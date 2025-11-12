@@ -1,0 +1,7 @@
+name = "24shapes-api"
+main = "src/index.js"
+compatibility_date = "2025-11-11"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+RECIPIENT_EMAIL = "24shapeslaboratory@gmail.com"

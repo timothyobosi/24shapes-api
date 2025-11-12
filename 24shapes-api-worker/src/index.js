@@ -68,11 +68,34 @@ async function getAccessToken(env) {
 }
 
 // === Send Email ===
+// === Send Email – UTF-8 + RFC 2047 + Base64 ===
 async function sendEmail(env, { to, subject, html, replyTo }) {
   try {
     const accessToken = await getAccessToken(env);
-    const raw = `From: ${env.EMAIL_USER}\nTo: ${to}\nReply-To: ${replyTo || to}\nSubject: ${subject}\nMIME-Version: 1.0\nContent-Type: text/html; charset=UTF-8\n\n${html}`;
-    const encoded = btoa(unescape(encodeURIComponent(raw)));
+
+    // Encode subject in UTF-8 Base64 (RFC 2047)
+    const encodeSubject = (str) => {
+      return `=?utf-8?B?${btoa(unescape(encodeURIComponent(str)))}?=`;
+    };
+
+    // Encode HTML body in UTF-8 Base64
+    const encodedBody = btoa(unescape(encodeURIComponent(html)));
+
+    // Build raw MIME message
+    const rawMessage = [
+      `From: ${env.EMAIL_USER}`,
+      `To: ${to}`,
+      `Reply-To: ${replyTo || to}`,
+      `Subject: ${encodeSubject(subject)}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: text/html; charset=utf-8`,
+      `Content-Transfer-Encoding: base64`,
+      '',
+      encodedBody
+    ].join('\r\n');
+
+    // Final base64 encode for Gmail API
+    const finalRaw = btoa(rawMessage);
 
     const res = await fetch(`https://www.googleapis.com/gmail/v1/users/${env.EMAIL_USER}/messages/send`, {
       method: 'POST',
@@ -80,7 +103,7 @@ async function sendEmail(env, { to, subject, html, replyTo }) {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ raw: encoded })
+      body: JSON.stringify({ raw: finalRaw })
     });
 
     if (!res.ok) {
@@ -131,27 +154,30 @@ export default {
 
         const serviceName = serviceLabels[serviceType] || serviceType;
 
-        // Admin Email
-        await sendEmail(env, {
-          to: env.RECIPIENT_EMAIL || env.EMAIL_USER,
-          subject: `New Enquiry – ${serviceName} – ${firstName} ${lastName}`,
-          html: adminEmailHtml({ firstName, lastName, email, phone, serviceName, preferredDate, message }),
-          replyTo: email,
-        });
+				// Admin Email
+				await sendEmail(env, {
+					to: env.RECIPIENT_EMAIL || env.EMAIL_USER,
+					subject: `New Enquiry - ${serviceName} - ${firstName} ${lastName}`,
+					html: adminEmailHtml({ firstName, lastName, email, phone, serviceName, preferredDate, message }),
+					replyTo: email,
+				});
 
-        // Customer Email
-        await sendEmail(env, {
-          to: email,
-          subject: 'Consultation Request Received - 24ShapesLab',
-          html: customerEmailHtml({ firstName, serviceName, preferredDate, email, phone }),
-        });
+				// Customer Email
+				await sendEmail(env, {
+					to: email,
+					subject: 'Consultation Request Received - 24ShapesLab',
+					html: customerEmailHtml({ firstName, serviceName, preferredDate, email, phone }),
+				});
 
-        return new Response(JSON.stringify({
-          success: true,
-          message: 'Enquiry submitted successfully. Check your email for confirmation.'
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+				return new Response(
+					JSON.stringify({
+						success: true,
+						message: 'Enquiry submitted successfully. Check your email for confirmation.',
+					}),
+					{
+						headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+					}
+				);
 
       } catch (err) {
         console.error('Enquiry error:', err.message);
