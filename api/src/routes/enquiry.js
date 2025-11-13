@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
 
     // Admin email
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: "24shapeslaboratory@gmail.com",
       to: process.env.RECIPIENT_EMAIL,
       subject: `New Consultation Enquiry – ${serviceName} – ${firstName} ${lastName}`,
       html: adminEmailHtml({ firstName, lastName, email, phone, serviceName, preferredDate, message }),
@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
 
     // Customer confirmation
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: "24shapeslaboratory@gmail.com",
       to: email,
       subject: 'Consultation Request Received - 24ShapesLab',
       html: customerEmailHtml({ firstName, serviceName, preferredDate, email, phone }),
