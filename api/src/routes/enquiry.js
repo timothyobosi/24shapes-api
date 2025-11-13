@@ -35,6 +35,8 @@ router.post('/', async (req, res) => {
       replyTo: email,
     });
 
+    console.log(`ADMIN EMAIL SENT -> ${process.env.RECIPIENT_EMAIL} | Enquiry: ${firstName} ${lastName} | Service: ${serviceName}`);
+
     // Customer confirmation
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -42,6 +44,8 @@ router.post('/', async (req, res) => {
       subject: 'Consultation Request Received - 24ShapesLab',
       html: customerEmailHtml({ firstName, serviceName, preferredDate, email, phone }),
     });
+
+    console.log(`CUSTOMER EMAIL SENT -> ${email} | Confirmation for ${firstName} ${lastName}`);
 
     res.json({
       success: true,
