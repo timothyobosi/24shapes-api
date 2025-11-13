@@ -156,7 +156,7 @@ export default {
 
 				// Admin Email
 				await sendEmail(env, {
-					from: "24shapeslaboratory@gmail.com",
+					from: "noreply@24shapeslaboratory.com",
 					to: env.RECIPIENT_EMAIL || env.EMAIL_USER,
 					subject: `New Enquiry - ${serviceName} - ${firstName} ${lastName}`,
 					html: adminEmailHtml({ firstName, lastName, email, phone, serviceName, preferredDate, message }),
@@ -167,7 +167,7 @@ export default {
 
 				// Customer Email
 				await sendEmail(env, {
-					from: "24shapeslaboratory@gmail.com",
+					from: "noreply@24shapeslaboratory.com",
 					to: email,
 					subject: 'Consultation Request Received - 24ShapesLab',
 					html: customerEmailHtml({ firstName, serviceName, preferredDate, email, phone }),
