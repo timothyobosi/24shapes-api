@@ -69,7 +69,7 @@ async function getAccessToken(env) {
 
 // === Send Email ===
 // === Send Email – UTF-8 + RFC 2047 + Base64 ===
-async function sendEmail(env, { to, subject, html, replyTo }) {
+async function sendEmail(env, { to, subject, html, replyTo, from }) {
   try {
     const accessToken = await getAccessToken(env);
 
@@ -83,7 +83,7 @@ async function sendEmail(env, { to, subject, html, replyTo }) {
 
     // Build raw MIME message
     const rawMessage = [
-      `From: ${env.EMAIL_USER}`,
+      `From: ${from || env.EMAIL_USER}`,
       `To: ${to}`,
       `Reply-To: ${replyTo || to}`,
       `Subject: ${encodeSubject(subject)}`,
@@ -156,18 +156,24 @@ export default {
 
 				// Admin Email
 				await sendEmail(env, {
+					from: "24shapeslaboratory@gmail.com",
 					to: env.RECIPIENT_EMAIL || env.EMAIL_USER,
 					subject: `New Enquiry - ${serviceName} - ${firstName} ${lastName}`,
 					html: adminEmailHtml({ firstName, lastName, email, phone, serviceName, preferredDate, message }),
 					replyTo: email,
 				});
 
+				console.log(`ADMIN EMAIL SENT -> ${env.RECIPIENT_EMAIL || env.EMAIL_USER} | Enquiry: ${firstName} ${lastName} | Service: ${serviceName}`);
+
 				// Customer Email
 				await sendEmail(env, {
+					from: "24shapeslaboratory@gmail.com",
 					to: email,
 					subject: 'Consultation Request Received - 24ShapesLab',
 					html: customerEmailHtml({ firstName, serviceName, preferredDate, email, phone }),
 				});
+
+				console.log(`CUSTOMER EMAIL SENT -> ${email} | Confirmation for ${firstName} ${lastName}`);
 
 				return new Response(
 					JSON.stringify({
